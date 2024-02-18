@@ -55,10 +55,23 @@ function App() {
       console.error('Error sending email verification:', error.message);
     }
   };
+  const handleLogout = () => {
+    // Clear the token and redirect to login page
+    localStorage.removeItem('token');
+    setIsAuthenticated(false);
+    // Redirect to login page, you can use the appropriate route or window.location.href
+  };
 
 
   return (
     <div className="container mt-5">
+       <div className="d-flex justify-content-end">
+        {isAuthenticated && (
+          <button className="btn btn-link" onClick={handleLogout}>
+            Logout
+          </button>
+        )}
+      </div>
     {isAuthenticated ? (
       <div>
         <h1>Welcome To Expense Tracker</h1>
