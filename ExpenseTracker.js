@@ -1,13 +1,14 @@
 // ExpenseTracker.js
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 
 const ExpenseTracker = ({ isAuthenticated }) => {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
   const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleAddExpense = () => {
+  const handleAddExpense =async () => {
     // Validate input fields
     if (!amount || !description || !category) {
       alert('All fields are mandatory');
@@ -23,13 +24,64 @@ const ExpenseTracker = ({ isAuthenticated }) => {
     };
 
     // Update the expenses array
-    setExpenses([...expenses, newExpense]);
+    // setExpenses([...expenses, newExpense]);
+    try {
+        setLoading(true);
+        // Save the new expense to the Firebase Realtime Database
+        const response = await fetch('https://exp1-aff40-default-rtdb.firebaseio.com/expenses.json', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(newExpense),
+        });
+  
+        if (response.ok) {
+          console.log('Expense added successfully');
+          // Refresh the expenses list after adding a new expense
+          fetchExpenses();
+        } else {
+          console.error('Failed to add expense');
+        }
+      } catch (error) {
+        console.error('Error adding expense', error);
+      } finally {
+        setLoading(false);
+      }
 
     // Clear input fields
     setAmount('');
     setDescription('');
     setCategory('');
   };
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      // Fetch expenses from the Firebase Realtime Database
+      const response = await fetch('https://exp1-aff40-default-rtdb.firebaseio.com/expenses.json');
+      const data = await response.json();
+
+      if (data) {
+        const fetchedExpenses = Object.keys(data).map((key) => ({
+          id: key,
+          ...data[key],
+        }));
+        setExpenses(fetchedExpenses);
+      } else {
+        setExpenses([]);
+      }
+    } catch (error) {
+      console.error('Error fetching expenses', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchExpenses();
+    }
+  }, [isAuthenticated]);
 
   return (
     isAuthenticated && (
@@ -76,20 +128,27 @@ const ExpenseTracker = ({ isAuthenticated }) => {
             {/* Add more categories as needed */}
           </select>
         </div>
-        <button className="btn btn-primary" onClick={handleAddExpense}>
+        {/* <button className="btn btn-primary" onClick={handleAddExpense}>
           Add Expense
+        </button> */}
+<button className="btn btn-primary" onClick={handleAddExpense} disabled={loading}>
+          {loading ? 'Adding Expense...' : 'Add Expense'}
         </button>
 
         <div className="mt-3">
           <h3>Expenses List</h3>
-          <ul>
-            {expenses.map((expense) => (
-              <li key={expense.id}>
-                <strong>Amount:</strong> ${expense.amount} | <strong>Description:</strong>{' '}
-                {expense.description} | <strong>Category:</strong> {expense.category}
-              </li>
-            ))}
-          </ul>
+          {expenses.length > 0 ? (
+            <ul>
+              {expenses.map((expense) => (
+                <li key={expense.id}>
+                  <strong>Amount:</strong> ${expense.amount} | <strong>Description:</strong>{' '}
+                  {expense.description} | <strong>Category:</strong> {expense.category}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No expenses found.</p>
+          )}
         </div>
       </div>
     )
