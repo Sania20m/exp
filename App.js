@@ -5,6 +5,8 @@ import './App.css';
 import ProfileCompletion from './components/ProfileCompletion';
 import ForgotPassword from './components/ForgotPassword';
 import { BrowserRouter as Router,Routes,Route,Link } from 'react-router-dom';
+import ExpenseTracker from './components/ExpenseTracker';
+
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showSignup, setShowSignup] = useState(true);
@@ -132,7 +134,7 @@ function App() {
         </button>
       </div>
     )}
-   
+    <ExpenseTracker isAuthenticated={isAuthenticated} />
    </div>
             }
           />
